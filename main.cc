@@ -6,42 +6,47 @@
 #include <set>
 #include <limits>
 
-#define _INF numeric_limits<double>::infinity()
+#define INF numeric_limits<double>::infinity()
 
 using namespace std;
 
-///Klasa reprezentująca wierzchołek grafu
-
-class point{
+class Node {
 	public:
 		double x;
 		double y;
 		
-		point(double xx, double yy){
-			x=xx; y=yy;
-		}
+		Node(double xx, double yy) : x(xx), y(yy) {}
 		
-		double dist(const point k) const{  //odległość pomiędzy punktami na płaszczyźnie
+		double distance(const Node k) const{  // odleglosc euklidesowa
 			 return sqrt((x-k.x)*(x-k.x)+(y-k.y)*(y-k.y));
 		}
 };
 
-///Klasa reprezentująca ścieżkę w grafie
 
-struct path{
+// Sciezka  w grafie
+class path {
+public:
 		double lenght;
 		deque<int> route;
-	
-		void print(){
-			int f, s;
-			f=route[0];
-			s=route[route.size()-1];
-			if(lenght==_INF){cout<<f<<" "<<s<<"\n"<<f<<" "<<s<<"\n"; return;}
-			cout<<f<<" "<<s<<" "<<lenght<<"\n";
-			cout<<f<<" "<<s;
-			for (int i=0; i<route.size(); ++i)cout<<" "<<route[i];
-			cout<<"\n";
-			return;
+
+		void print() {
+			int first, last;
+			first = route[0];
+			last = route[route.size()-1];
+			
+			if (lenght == INF) { // nie ma sciezki
+				cout << first << "  " << last << std::endl << first << " " << last << std::endl;
+				return;
+			}
+			
+			cout << first << " " << last << " " << lenght << std::endl; // dlugosc
+			cout << first << " " << last;
+			
+			for (int i=0; i < route.size(); ++i)
+				cout << " " << route[i];
+			
+			cout << std::endl;
+			
 		}
 };
 
@@ -49,15 +54,15 @@ struct path{
 
 class graph{
 	private:
-		vector<point> positions;
+		vector<Node> positions;
 		vector<map<int, double> > connected;
 	public:
-		void addpoint(double x, double y){  //wstawianie wierzchołków
-			positions.push_back(point(x,y));
+		void addNode(double x, double y){  //wstawianie wierzchołków
+			positions.push_back(Node(x,y));
 			connected.push_back(map<int, double>()); //powiększenie tablicy list krawędzi
 		}
 		
-		void addedge(int f, int s, double d){  //dodawanie krwędzi
+		void addEdge(int f, int s, double d){  //dodawanie krwędzi
 			connected[f][s]=d;
 		}
 		
@@ -68,16 +73,16 @@ class graph{
 		}
 	
 		double dist(int f, int s){		//długość krawędzi pomiędzy wierzchołkami
-			if (connected[f].count(s))return positions[f].dist(positions[s]);
-			return _INF;
+			if (connected[f].count(s))return positions[f].distance(positions[s]);
+			return INF;
 		}
 	
 		double wdist(int f, int s){		//długość wagowa krawędzi pomiędzy wierzchołkami
 			if (connected[f].count(s))return connected[f][s];
-			return _INF;
+			return INF;
 		}
 			
-		path dijkstra(int f, int s){	//znajdowanie najkrótszej ścieżki
+		path findPath(int f, int s){	//znajdowanie najkrótszej ścieżki
 			path r;		//zwracana ścieżka
 			int size=positions.size();
 			int precursor[size];	//poprzednicy
@@ -89,7 +94,7 @@ class graph{
 			int u;					//obsługiwany wierzchołek
 			
 						
-			for (int i=0; i<size; ++i)lenght[i]=_INF;
+			for (int i=0; i<size; ++i)lenght[i]=INF;
 			lenght[f]=0;
 			
 			for (int i=0; i<size; ++i)points.insert(i);  //wypełnianie zbioru wierzchołków
@@ -113,7 +118,7 @@ class graph{
 			}
 			
 			r.lenght = lenght[s];
-			if (r.lenght==_INF){r.route.push_front(s); r.route.push_front(f); return r;}
+			if (r.lenght==INF){r.route.push_front(s); r.route.push_front(f); return r;}
 			r.route.push_front(u=s);
 			while(u!=f){
 				r.route.push_front(precursor[u]);
@@ -123,25 +128,25 @@ class graph{
 			return r;
 		}
 		
-		path findsecond(int f, int s, path first) const{  //znajdowanie drugiej ścieżki nie zawierającej first
+		path findSecondPath(int f, int s, path first) const{  //znajdowanie drugiej ścieżki nie zawierającej first
 			path second, help;
 			graph temp=*this;
 			double rem;
 			
 			rem=temp.remedge(first.route[0], first.route[1]);
-			second=temp.dijkstra(f, s);
+			second=temp.findPath(f, s);
 			
 			for(int i=1; i<first.route.size()-1; ++i){
-				temp.addedge(first.route[i-1], first.route[i], rem);
+				temp.addEdge(first.route[i-1], first.route[i], rem);
 				rem=temp.remedge(first.route[i], first.route[i+1]);
-				help=temp.dijkstra(f, s);
+				help=temp.findPath(f, s);
 				if(help.lenght<second.lenght)second=help;
 			}
 			
 			return second;
 		}
 		
-		path wdijkstra(int f, int s){	//znajdowanie najkrótszej ścieżki
+		path findPathW(int f, int s){	//znajdowanie najkrótszej ścieżki
 			path r;		//zwracana ścieżka
 			int size=positions.size();
 			int precursor[size];	//poprzednicy
@@ -153,7 +158,7 @@ class graph{
 			int u;					//obsługiwany wierzchołek
 			
 						
-			for (int i=0; i<size; ++i)lenght[i]=_INF;
+			for (int i=0; i<size; ++i)lenght[i]=INF;
 			lenght[f]=0;
 			
 			for (int i=0; i<size; ++i)points.insert(i);  //wypełnianie zbioru wierzchołków
@@ -176,7 +181,7 @@ class graph{
 			}
 			
 			r.lenght = lenght[s];
-			if (r.lenght==_INF){r.route.push_front(s); r.route.push_front(f); return r;}
+			if (r.lenght==INF){r.route.push_front(s); r.route.push_front(f); return r;}
 			r.route.push_front(u=s);
 			while(u!=f){
 				r.route.push_front(precursor[u]);
@@ -186,18 +191,18 @@ class graph{
 			return r;
 		}
 		
-		path wfindsecond(int f, int s, path first) const{  //znajdowanie drugiej ścieżki nie zawierającej first
+		path findSecondPathW(int f, int s, path first) const{  //znajdowanie drugiej ścieżki nie zawierającej first
 			path second, help;
 			graph temp=*this;
 			double rem;
 			
 			rem=temp.remedge(first.route[0], first.route[1]);
-			second=temp.wdijkstra(f, s);
+			second=temp.findPathW(f, s);
 			
 			for(int i=1; i<first.route.size()-1; ++i){
-				temp.addedge(first.route[i-1], first.route[i], rem);
+				temp.addEdge(first.route[i-1], first.route[i], rem);
 				rem=temp.remedge(first.route[i], first.route[i+1]);
-				help=temp.wdijkstra(f, s);
+				help=temp.findPathW(f, s);
 				if(help.lenght<second.lenght)second=help;
 			}
 			
@@ -208,34 +213,49 @@ class graph{
 
 
 int main(){	
-		char buffer[64];
-		vector<int> begin, end;  //początki i końce znajdowanych ścieżek
-		path one, two;			//ścieżki
-		graph main;				//graf
-		int n=0;				
-		double x=0, y=0, z=0;
-		bool state=true;
+		char buffer[64];	// bufor na wczytywane linie
+		graph Graph;			
+		vector<int> start, end;  //wezly poczatkowe i koncowe sciezek
+		path first, second;		// szukane sciezki
+		
+		int ret=0;				
+		double a=0, b=0, c=0;
+		bool token = true;
 		
 		
 		while(true){
 			cin.getline(buffer, sizeof(buffer));
-			n=sscanf(buffer, "%lf %lf %lf", &x, &y, &z);
+			ret = sscanf(buffer, "%lf %lf %lf", &a, &b, &c); // czytamy lilijke
 			
-			if(n<2)break;
-			if(n==2 && state)main.addpoint(x, y);
-			if(n==3){main.addedge(static_cast<int>(x), static_cast<int>(y), z); state=false;}
-			if(n==2 && !state){begin.push_back(static_cast<int>(x)); end.push_back(static_cast<int>(y));}
+			// debug, co wczytano
+			std::cerr << "Read: " << a << " " << b << " " << c << std::endl; 
+			
+			if (ret == EOF) // koniec pliku
+				break;
+			if (ret == 2 && token) // wezly
+				Graph.addNode(a, b);
+			if (ret == 3) { // krawedzie
+				Graph.addEdge(static_cast<int>(a), static_cast<int>(b), c); 
+				token = false;
+			}
+			if (ret == 2 && !token) { // sciezki do szukania
+				start.push_back(static_cast<int>(a)); 
+				end.push_back(static_cast<int>(b));
+			}
 		}
 		
-		for(int i=0; i<begin.size(); ++i){
-			one=main.dijkstra(begin[i], end[i]);
-			one.print();
-			two=main.findsecond(begin[i], end[i], one);
-			two.print();
-			one=main.wdijkstra(begin[i], end[i]);
-			two=main.wfindsecond(begin[i], end[i], one);
-			one.print();
-			two.print();
+		for (int i=0; i<start.size(); ++i) {
+			first = Graph.findPath(start[i], end[i]);
+			first.print();
+
+			second = Graph.findSecondPath(start[i], end[i], first);
+			second.print();
+			
+			first = Graph.findPathW(start[i], end[i]);
+			first.print();
+			
+			second = Graph.findSecondPathW(start[i], end[i], first);
+			second.print();
 		}
 		
 			
