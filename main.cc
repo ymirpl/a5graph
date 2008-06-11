@@ -166,24 +166,24 @@ class Graph {
 			return path;
 		}
 		
-		Path findSecondPath(int f, int s, Path shortets) const {  
+		Path findSecondPath(int f, int s, Path shortets, bool W = false)  {  
 	
 			Graph temp = *this; // coby nie poposuc grafu
 			Path path, candidate; // zwracana i pomocnicza sciezka
 			double removedWeight;
 			
-			removedWeight = temp.rmEdge(shortets.route[0], shortets.route[1]); 
-			path = temp.findPath(f, s);
+			removedWeight = temp.rmEdge(shortets.route[0], shortets.route[1]); // po kolei usuwamy kr z pierwszej sciezki
+			path = temp.findPath(f, s, W);
 			
-			for(int i=1; i<shortets.route.size()-1; ++i) {
+			for(int i = 1; i < shortets.route.size() - 1; ++i) {
 				
 				temp.addEdge(shortets.route[i-1], shortets.route[i], removedWeight);
 				removedWeight=temp.rmEdge(shortets.route[i], shortets.route[i+1]);
 				
-				candidate = temp.findPath(f, s);
+				candidate = temp.findPath(f, s, W);
 				
 				if(candidate.lenght < path.lenght)
-					path=candidate;
+					path = candidate;
 			}
 			
 			return path;
@@ -193,22 +193,8 @@ class Graph {
 			return findPath(f,s,true);
 		}
 		
-		Path findSecondPathW(int f, int s, Path first) const{  //znajdowanie drugiej ścieżki nie zawierającej first
-			Path second, help;
-			Graph temp=*this;
-			double rem;
-			
-			rem=temp.rmEdge(first.route[0], first.route[1]);
-			second=temp.findPathW(f, s);
-			
-			for(int i=1; i<first.route.size()-1; ++i){
-				temp.addEdge(first.route[i-1], first.route[i], rem);
-				rem=temp.rmEdge(first.route[i], first.route[i+1]);
-				help=temp.findPathW(f, s);
-				if(help.lenght<second.lenght)second=help;
-			}
-			
-			return second;
+		Path findSecondPathW(int f, int s, Path first) {  
+			return findSecondPath(f,s,first,true);
 		}			
 };
 
